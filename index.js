@@ -83,8 +83,8 @@ const Sequelize = require('sequelize');
 // initialze an instance of Sequelize
 const sequelize = new Sequelize({
   database: 'users',
-  username: 'phpmyadmin',
-  password: 'yAF9XMNYP9NyTc2C',
+  username: 'lk',
+  password: '7da6fa120c7b03f94cc',
   dialect: 'mysql',
 });
 
@@ -250,7 +250,7 @@ app.post('/checkToken', withAuth, function(req, res) {
 });
 app.post('/checkAdmin', async function(req, res) {
   const decoded = await jwt.verify(req.body.token, 'wowwow');
-  if(decoded.id == 74) {
+  if(decoded.id == 2) {
     res.sendStatus(200);
   }else {
     res.sendStatus(401);
@@ -262,23 +262,23 @@ app.post("/getUser", async (req, res, next) => {
   
   try {
     const decoded = await jwt.verify(usertoken, 'wowwow');
+    console.log(decoded);
     let user = await getUser({ id: decoded.id });
-    const params = new URLSearchParams();
-    params.append('id', user.name);
-    const resAxios = await axios.post("https://vk.masterimodel.com/node/masters.get", params)
-    res.send(resAxios.data);
-  } catch (error) {
-    try {
-      const decoded = await jwt.verify(usertoken, 'wowwow');
-      let user = await getUser({ name: decoded.id });
-      const params = new URLSearchParams();
-      params.append('id', user.name);
-      const resAxios = await axios.post("https://vk.masterimodel.com/node/masters.get", params)
-      res.send(resAxios.data);
-    } catch (error) {
-      res.send({access: false})  
-    }
+    let id;
+    user ? id = user.name : id = decoded.id;
     
+    const params = new URLSearchParams();
+    params.append('id', id);
+    const resAxios = await axios.post("https://vk.masterimodel.com/node/masters.get", params)
+    
+    
+    if (resAxios.data === "master not found"){
+      res.send(resAxios.data);
+    } 
+    res.send(resAxios.data);
+    
+  } catch (error) {
+    console.log(error);
   }
 })
 // вк авторизация (через сервис 0auth)
@@ -303,15 +303,14 @@ app.get('/auth/vkontakte', passport.authenticate('vkontakte'));
 
 app.get('/auth/vkontakte/callback',
   passport.authenticate('vkontakte', {
-    failureRedirect: 'https://lk.masterimodel.app/card/7296096' 
+    failureRedirect: 'https://lk.masterimodel.app/login' 
   }), async (req, res) => {
     if (req.user.id){
       let payload = { id: req.user.id };
       let token = jwt.sign(payload, jwtOptions.secretOrKey, {
         expiresIn: '1h'
       });
-      const decoded = await jwt.verify(token, 'wowwow');
-      res.redirect('https://lk.masterimodel.app/profile?token='+ token);
+      res.redirect('https://lk.masterimodel.app/callback2?token='+ token);
     } else {
       res.send({'err': 'err'});
     }
